@@ -1,0 +1,1 @@
+from app.tests.test_views import *

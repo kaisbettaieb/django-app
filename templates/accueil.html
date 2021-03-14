@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block titre %} Acceuil {% endblock %}
+
+{% block body %}
+    {% if user.is_authenticated %}
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-9">
+                    Bonjour <strong>{{ user.username }} </strong>,! Voila vos données:<br>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'logout' %}">Log Out</a>
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="col-md-3 offset-md-2">
+                    <div id="userEmail" class="mb-2">{{ user.email }}</div>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#maj-modal"> Change
+                        l'adresse mail
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="modal fade" id="maj-modal" tabindex="-1" role="dialog" aria-labelledby="maj-modal-label"
+             aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">New message</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="maj-email-form">
+                            <div class="alert alert-warning" role="alert" id="alert-error" hidden>
+
+                            </div>
+                            <div class="alert alert-success" role="alert" id="alert-success" hidden>
+
+                            </div>
+
+                            <div class="form-group">
+                                <label for="user-email" class="col-form-label">Votre nouvelle adresse mail:</label>
+                                <input type="email" class="form-control" id="user-email">
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="Metre à jours">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <h3>
+            Vous n'etes pas connecter.<br>
+            veuillez vous connecter pour accéder au contenu de cette page.
+            <a href="{% url 'login' %}">Se connecter</a>
+        </h3>
+    {% endif %}
+
+
+
+{% endblock %}
+{% block javascript %}
+    <script>
+        $("#maj-email-form").submit(function (e) {
+
+            e.preventDefault();
+            var email = $("#user-email").val();
+
+            $.ajax({
+                type: "POST",
+                url: "/update/email",
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                data: {"email": email},
+                success: function (data) {
+                    console.log("suceess")
+                    console.log(data);
+                    if (data["status"] === "erreur") {
+                        $("#alert-error").text(data["message"]).removeAttr('hidden');
+                        $("#alert-success").attr("hidden", true);
+                    } else {
+                        $("#alert-success").text(data["message"]).removeAttr('hidden');
+                        $("#alert-error").attr("hidden", true)
+                        $("#userEmail").text(data["email"]);
+                    }
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    $("#alert-error").text("Un erreur s'est produite, veuillez essayer plus tard.").removeAttr('hidden');
+                    $("#alert-success").attr("hidden", true);
+                }
+            });
+        });
+
+    </script>
+{% endblock %}
